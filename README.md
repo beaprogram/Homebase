@@ -244,17 +244,3 @@ Nightly Prefect flow (`data/orchestration/flow.py`):
 3. `dbt run` — build staging views + mart tables
 4. `dbt test` — run 20+ data quality assertions
 5. Slack alert on failure
-
----
-
-## Interview Talking Points
-
-**Software Engineering (TD, RBC, BMO):** 20 REST endpoints, JWT auth with BCrypt, Spring Data JPA with custom JPQL filters, Flyway migrations, OpenAPI spec, Testcontainers integration tests.
-
-**QA / Test Automation (HOOPP, CGI):** JUnit 5 + Mockito unit tests, WebMvcTest controller tests, pytest on ingestion and AI service, Vitest + RTL component tests, Playwright E2E suite, JaCoCo coverage gate.
-
-**Analytics Engineering (QuadReal, EY):** dbt staging + marts, star schema (3 dims, 2 facts), 20+ dbt tests (not_null, unique, relationships, custom), Prefect orchestration, data dictionary.
-
-**AI/ML (RBC Borealis):** RAG pipeline — sentence-transformers embeddings → pgvector cosine similarity retrieval → Claude API generation with listing citations. Separate FastAPI service for latency isolation.
-
-**DevOps / Cloud:** Docker multi-stage builds, docker-compose for dev/prod parity, GitHub Actions 4-stage pipeline, Azure App Service + Container Registry, Application Insights, Terraform IaC.
