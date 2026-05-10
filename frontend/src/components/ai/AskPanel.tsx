@@ -10,13 +10,15 @@ export default function AskPanel() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const AI_BASE = import.meta.env.VITE_AI_SERVICE_URL ?? ''
+
   const handleAsk = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!query.trim()) return
     setLoading(true)
     setError(null)
     try {
-      const res = await axios.post<AskResponse>('/ask', { query, top_k: 5 })
+      const res = await axios.post<AskResponse>(`${AI_BASE}/ask`, { query, top_k: 5 })
       setResult(res.data)
     } catch {
       setError('Unable to reach the AI service. Make sure it is running.')

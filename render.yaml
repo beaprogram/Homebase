@@ -1,0 +1,91 @@
+databases:
+  - name: homebase-db
+    databaseName: homebase
+    user: homebase
+    plan: free
+
+services:
+  - type: web
+    name: homebase-backend
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: homebase-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: homebase-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: homebase-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: homebase-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: homebase-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+
+  - type: web
+    name: homebase-frontend
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: frontend/dist
+    pullRequestPreviewsEnabled: true
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://homebase-backend.onrender.com
+      - key: VITE_AI_SERVICE_URL
+        value: https://homebase-ai.onrender.com
+
+  - type: web
+    name: homebase-ai
+    runtime: docker
+    dockerfilePath: ai-service/Dockerfile
+    dockerContext: ai-service
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: homebase-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: homebase-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: homebase-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: homebase-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: homebase-db
+          property: password
+      - key: ANTHROPIC_API_KEY
+        sync: false
