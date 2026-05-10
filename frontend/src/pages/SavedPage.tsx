@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useSavedListings, useUnsaveListing } from '../hooks/useSavedListings'
+import { useSavedListings } from '../hooks/useSavedListings'
 import Spinner from '../components/ui/Spinner'
 import ListingCard from '../components/listings/ListingCard'
 import Button from '../components/ui/Button'
