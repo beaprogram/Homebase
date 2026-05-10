@@ -4,6 +4,8 @@ A full-stack housing search platform for Toronto renters and buyers. Search list
 
 > **Built for Canadian co-op applications** — covers software engineering, QA, data engineering, analytics, AI, and DevOps.
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beaprogram/Homebase)
+
 ---
 
 ## Architecture
@@ -214,6 +216,28 @@ Four stages, runs on every PR:
 2. **Test** — JUnit tests against real Postgres (Testcontainers), pytest, Vitest
 3. **Quality** — JaCoCo coverage, ESLint, ruff
 4. **Deploy** — Push images to Azure Container Registry → deploy to App Service (main branch only)
+
+---
+
+## Deploy to Render (one click)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beaprogram/Homebase)
+
+Render reads `render.yaml` and provisions everything automatically:
+
+| Service | Type | Notes |
+|---|---|---|
+| `homebase-backend` | Web Service (Docker) | Spring Boot; Flyway auto-migrates + seeds DB |
+| `homebase-frontend` | Static Site | React build, CDN-delivered, HTTPS |
+| `homebase-ai` | Web Service (Docker) | FastAPI RAG; embedding model pre-baked |
+| `homebase-db` | PostgreSQL | 20 listings seeded automatically on first boot |
+
+**After deploy (~5 min):**
+1. Copy the `homebase-backend` URL from the Render dashboard (e.g. `https://homebase-backend.onrender.com`)
+2. Go to `homebase-frontend` → **Environment** → set `VITE_API_BASE_URL` to that URL → **Manual Deploy**
+3. Optionally set `ANTHROPIC_API_KEY` on `homebase-ai` to enable the AI Q&A panel
+
+> Free tier services sleep after 15 min inactivity — first request takes ~30s to wake. Upgrade to Starter ($7/mo) for always-on.
 
 ---
 
