@@ -1,0 +1,47 @@
+version: 2
+
+sources:
+  - name: transactional
+    schema: public
+    tables:
+      - name: listings
+        description: Raw transactional listings table from the Spring Boot backend
+      - name: transit_stops
+        description: TTC transit stops loaded from GTFS data
+
+models:
+  - name: stg_listings
+    description: Cleaned and typed staging view of listings
+    columns:
+      - name: listing_id
+        description: Primary key
+        tests:
+          - not_null
+          - unique
+      - name: title
+        tests:
+          - not_null
+      - name: listing_type
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['RENTAL', 'SALE']
+      - name: price
+        tests:
+          - not_null
+
+  - name: stg_neighbourhoods
+    description: Neighbourhood-level aggregates derived from listings
+    columns:
+      - name: neighbourhood
+        tests:
+          - not_null
+          - unique
+
+  - name: stg_transit_stops
+    description: Staged TTC transit stops
+    columns:
+      - name: stop_id
+        tests:
+          - not_null
+          - unique

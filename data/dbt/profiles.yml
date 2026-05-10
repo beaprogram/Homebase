@@ -1,0 +1,12 @@
+homebase:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('DBT_HOST', 'localhost') }}"
+      port: "{{ env_var('DBT_PORT', '5432') | int }}"
+      dbname: "{{ env_var('DBT_DBNAME', 'homebase') }}"
+      schema: public
+      user: "{{ env_var('DBT_USER', 'homebase') }}"
+      password: "{{ env_var('DBT_PASSWORD', 'homebase') }}"
+      threads: 4

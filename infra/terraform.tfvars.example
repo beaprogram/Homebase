@@ -1,0 +1,7 @@
+location                  = "eastus"
+resource_group_name       = "homebase-rg"
+acr_name                  = "homebaseacr"
+postgresql_admin_username = "homebaseadmin"
+postgresql_admin_password = "ChangeMe123!"
+app_service_plan_sku      = "B2"
+environment               = "prod"

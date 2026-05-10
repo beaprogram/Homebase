@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: dim_listing
+    description: Full listing dimension with derived category and price tier fields
+    columns:
+      - name: listing_id
+        tests:
+          - not_null
+          - unique
+      - name: listing_type
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['RENTAL', 'SALE']
+      - name: price_tier
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['budget', 'mid-range', 'premium']
+      - name: neighbourhood
+        tests:
+          - relationships:
+              to: ref('dim_neighbourhood')
+              field: neighbourhood
+
+  - name: dim_neighbourhood
+    description: Neighbourhood-level dimension with price aggregates and affordability tier
+    columns:
+      - name: neighbourhood
+        tests:
+          - not_null
+          - unique
+      - name: listing_count
+        tests:
+          - not_null
+
+  - name: dim_date
+    description: Date spine covering 2024-01-01 to one year from today
+    columns:
+      - name: date_day
+        tests:
+          - not_null
+          - unique
+
+  - name: fact_listing_snapshot
+    description: Daily snapshot of listing counts and price statistics by neighbourhood and type
+    columns:
+      - name: neighbourhood
+        tests:
+          - not_null
+      - name: listing_type
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['RENTAL', 'SALE']
