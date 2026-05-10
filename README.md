@@ -4,7 +4,7 @@ A full-stack housing search platform for Toronto renters and buyers. Search list
 
 > **Built for Canadian co-op applications** — covers software engineering, QA, data engineering, analytics, AI, and DevOps.
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beaprogram/Homebase)
+**[🌐 Live Demo](https://homebase-frontend-54zw.onrender.com)** · [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beaprogram/Homebase)
 
 ---
 
