@@ -10,39 +10,56 @@ A full-stack housing search platform for Toronto renters and buyers. Search list
 
 ## Architecture
 
-```
-┌──────────────────────────────────────────────────────────┐
-│  USERS: Renter/Buyer (web) │ Analyst (Power BI)          │
-└────────────────┬─────────────────────────┬───────────────┘
-                 │                         │
-         ┌───────▼───────┐                 │
-         │ React Frontend│                 │
-         │ TypeScript    │                 │
-         │ Tailwind/Vite │                 │
-         └───────┬───────┘                 │
-                 │ REST/JSON               │
-         ┌───────▼────────┐ ┌─────────────▼──────────┐
-         │ Spring Boot    │ │ Analytics Warehouse     │
-         │ Java 21, JWT   │ │ DuckDB/Postgres         │
-         │ PostgreSQL/JPA │ │ dbt star schema         │
-         └───┬────────┬───┘ └─────────┬──────────────┘
-             │        │               │
-             │  ┌─────▼────────┐     │
-             │  │ AI Service   │     │
-             │  │ Python/FastAPI     │
-             │  │ RAG + Claude │     │
-             │  └─────────────┘     │
-             │                       │
-         ┌───▼──────────┐    ┌───────▼────────────┐
-         │ PostgreSQL   │    │ Power BI / Streamlit│
-         │ (transact.)  │    │ Analyst Dashboard   │
-         └──────────────┘    └────────────────────┘
+```mermaid
+flowchart TB
+    classDef user fill:#1f2937,stroke:#60a5fa,stroke-width:2px,color:#f9fafb
+    classDef frontend fill:#0c4a6e,stroke:#38bdf8,stroke-width:2px,color:#f0f9ff
+    classDef backend fill:#14532d,stroke:#4ade80,stroke-width:2px,color:#f0fdf4
+    classDef ai fill:#581c87,stroke:#c084fc,stroke-width:2px,color:#faf5ff
+    classDef data fill:#7c2d12,stroke:#fb923c,stroke-width:2px,color:#fff7ed
+    classDef ops fill:#374151,stroke:#9ca3af,stroke-width:2px,color:#f9fafb,stroke-dasharray:5 5
 
-ORCHESTRATION: Prefect nightly — ingest → dbt → test → alert
-DEPLOYMENT: Azure App Service + Azure DB for PostgreSQL
-CI/CD: GitHub Actions (build → test → quality → deploy)
-IaC: Terraform
+    U1["👤 Renter / Buyer<br/>(Web Browser)"]:::user
+    U2["📊 Analyst<br/>(Power BI)"]:::user
+
+    FE["⚛️ React Frontend<br/>TypeScript • Tailwind • Vite"]:::frontend
+
+    API["☕ Spring Boot API<br/>Java 21 • JWT • JPA"]:::backend
+    AI["🤖 AI Service<br/>Python • FastAPI • RAG + Claude"]:::ai
+
+    DB[("🗄️ PostgreSQL<br/>Transactional + pgvector")]:::data
+    WH[("📦 Analytics Warehouse<br/>DuckDB / Postgres • dbt star schema")]:::data
+
+    BI["📈 Power BI / Streamlit<br/>Analyst Dashboard"]:::frontend
+
+    ORCH["⏱️ Prefect (nightly)<br/>ingest → dbt → test → alert"]:::ops
+    CI["🚀 GitHub Actions<br/>build → test → quality → deploy"]:::ops
+    CLOUD["☁️ Azure App Service<br/>+ Azure DB for PostgreSQL • Terraform IaC"]:::ops
+
+    U1 --> FE
+    FE -- REST / JSON --> API
+    API <--> DB
+    API -- semantic search --> AI
+    AI -- embeddings --> DB
+
+    ORCH --> DB
+    ORCH --> WH
+    WH --> BI
+    U2 --> BI
+
+    CI -.-> FE
+    CI -.-> API
+    CI -.-> AI
+    CLOUD -.-> FE
+    CLOUD -.-> API
+    CLOUD -.-> AI
 ```
+
+**Request flow.** Users hit the React SPA, which calls the Spring Boot API for listings and saved-listing operations. Natural-language queries are forwarded to the Python AI service, which performs RAG over pgvector embeddings and synthesizes answers with Claude.
+
+**Data pipeline.** A nightly Prefect flow ingests Toronto Open Data and TTC feeds into Postgres, runs dbt transformations into the analytics warehouse, executes data-quality tests, and feeds the Power BI / Streamlit dashboards for analysts.
+
+**Delivery.** GitHub Actions runs a four-stage pipeline (build → test → quality → deploy) and ships Docker images to Azure App Service. Infrastructure is defined in Terraform.
 
 ## Tech Stack
 
