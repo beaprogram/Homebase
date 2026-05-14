@@ -19,22 +19,22 @@ flowchart TB
     classDef data fill:#7c2d12,stroke:#fb923c,stroke-width:2px,color:#fff7ed
     classDef ops fill:#374151,stroke:#9ca3af,stroke-width:2px,color:#f9fafb,stroke-dasharray:5 5
 
-    U1["👤 Renter / Buyer<br/>(Web Browser)"]:::user
-    U2["📊 Analyst<br/>(Power BI)"]:::user
+    U1["Renter / Buyer<br/>(Web Browser)"]:::user
+    U2["Analyst<br/>(Power BI)"]:::user
 
-    FE["⚛️ React Frontend<br/>TypeScript • Tailwind • Vite"]:::frontend
+    FE["React Frontend<br/>TypeScript - Tailwind - Vite"]:::frontend
 
-    API["☕ Spring Boot API<br/>Java 21 • JWT • JPA"]:::backend
-    AI["🤖 AI Service<br/>Python • FastAPI • RAG + Claude"]:::ai
+    API["Spring Boot API<br/>Java 21 - JWT - JPA"]:::backend
+    AI["AI Service<br/>Python - FastAPI - RAG + Claude"]:::ai
 
-    DB[("🗄️ PostgreSQL<br/>Transactional + pgvector")]:::data
-    WH[("📦 Analytics Warehouse<br/>DuckDB / Postgres • dbt star schema")]:::data
+    DB[("PostgreSQL<br/>Transactional + pgvector")]:::data
+    WH[("Analytics Warehouse<br/>DuckDB / Postgres - dbt star schema")]:::data
 
-    BI["📈 Power BI / Streamlit<br/>Analyst Dashboard"]:::frontend
+    BI["Power BI / Streamlit<br/>Analyst Dashboard"]:::frontend
 
-    ORCH["⏱️ Prefect (nightly)<br/>ingest → dbt → test → alert"]:::ops
-    CI["🚀 GitHub Actions<br/>build → test → quality → deploy"]:::ops
-    CLOUD["☁️ Azure App Service<br/>+ Azure DB for PostgreSQL • Terraform IaC"]:::ops
+    ORCH["Prefect (nightly)<br/>ingest -> dbt -> test -> alert"]:::ops
+    CI["GitHub Actions<br/>build -> test -> quality -> deploy"]:::ops
+    CLOUD["Azure App Service<br/>+ Azure DB for PostgreSQL - Terraform IaC"]:::ops
 
     U1 --> FE
     FE -- REST / JSON --> API
@@ -59,7 +59,7 @@ flowchart TB
 
 **Data pipeline.** A nightly Prefect flow ingests Toronto Open Data and TTC feeds into Postgres, runs dbt transformations into the analytics warehouse, executes data-quality tests, and feeds the Power BI / Streamlit dashboards for analysts.
 
-**Delivery.** GitHub Actions runs a four-stage pipeline (build → test → quality → deploy) and ships Docker images to Azure App Service. Infrastructure is defined in Terraform.
+**Delivery.** GitHub Actions runs a four-stage pipeline (build -> test -> quality -> deploy) and ships Docker images to Azure App Service. Infrastructure is defined in Terraform.
 
 ## Tech Stack
 
