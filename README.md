@@ -81,7 +81,7 @@ IaC: Terraform
 
 ```bash
 # Clone and start everything
-git clone <repo>
+git clone https://github.com/beaprogram/Homebase.git
 cd HomeBase
 cp .env.example .env   # add ANTHROPIC_API_KEY for AI Q&A
 
