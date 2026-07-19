@@ -1,4 +1,5 @@
 import pytest
+import requests
 import responses as resp_lib
 from ingest_toronto import fetch_records, transform, price_for_bedrooms
 
@@ -55,7 +56,7 @@ def test_fetch_records_empty_on_error():
     resp_lib.add(
         resp_lib.GET,
         "https://ckan0.cf.opendata.inter.toronto.ca/api/3/action/datastore_search",
-        body=Exception("Connection refused"),
+        body=requests.ConnectionError("Connection refused"),
     )
     records = fetch_records(limit=10)
     assert records == []
