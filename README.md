@@ -1,287 +1,187 @@
-# HomeBase — Cross-Source Housing Intelligence Platform
+# Homebase
 
-A full-stack housing search platform for Toronto renters and buyers. Search listings by neighbourhood, transit access, and price. Ask natural-language questions powered by RAG + Claude AI.
+[![CI](https://github.com/beaprogram/Homebase/actions/workflows/ci.yml/badge.svg)](https://github.com/beaprogram/Homebase/actions/workflows/ci.yml)
 
-> **Built for Canadian co-op applications** — covers software engineering, QA, data engineering, analytics, AI, and DevOps.
+A full-stack housing search platform for Toronto renters and buyers. Homebase combines structured listing filters, saved listings, JWT authentication, and a natural-language retrieval service in one repository.
 
-**[Live Demo](https://homebase-frontend-54zw.onrender.com)** · [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beaprogram/Homebase)
+## Product preview
 
----
+| Search and AI interface | Account creation |
+|---|---|
+| ![Homebase search interface](docs/screenshots/home-search.png) | ![Homebase account creation](docs/screenshots/register.png) |
+
+The [public frontend preview](https://homebase-frontend-54zw.onrender.com) demonstrates the current UI. API-backed listings, authentication, and AI responses require active backend, database, and AI services; the previous public backend URL was not healthy when this README was updated. The repository's Docker Compose setup is the reproducible way to evaluate the complete stack.
+
+## What is implemented
+
+| Area | Current repository evidence |
+|---|---|
+| Web client | React and TypeScript pages for search, listing details, registration, login, and saved listings |
+| REST API | Spring Boot controllers and services for authentication, listings, filters, and saved listings |
+| Data | PostgreSQL schema and Flyway migrations, including seeded listings and pgvector support |
+| Applied AI | FastAPI `/ask` endpoint with embedding, retrieval, and Claude integration modules |
+| Analytics | Python ingestion, dbt staging/mart models, a Prefect flow, and a Streamlit dashboard |
+| Quality | JUnit/Mockito, Vitest/Testing Library, pytest, and Playwright suites |
+| Delivery | Dockerfiles, Docker Compose, a Render blueprint, GitHub Actions CI, and optional Azure Terraform |
 
 ## Architecture
 
 ```mermaid
-flowchart TB
-    classDef user fill:#1f2937,stroke:#60a5fa,stroke-width:2px,color:#f9fafb
-    classDef frontend fill:#0c4a6e,stroke:#38bdf8,stroke-width:2px,color:#f0f9ff
-    classDef backend fill:#14532d,stroke:#4ade80,stroke-width:2px,color:#f0fdf4
-    classDef ai fill:#581c87,stroke:#c084fc,stroke-width:2px,color:#faf5ff
-    classDef data fill:#7c2d12,stroke:#fb923c,stroke-width:2px,color:#fff7ed
-    classDef ops fill:#374151,stroke:#9ca3af,stroke-width:2px,color:#f9fafb,stroke-dasharray:5 5
+flowchart LR
+    U["Web browser"] --> FE["React + TypeScript"]
+    FE --> API["Spring Boot REST API"]
+    FE --> AI["FastAPI retrieval service"]
+    API --> DB[("PostgreSQL + pgvector")]
+    AI --> DB
 
-    U1["Renter / Buyer<br/>(Web Browser)"]:::user
-    U2["Analyst<br/>(Power BI)"]:::user
+    INGEST["Toronto data ingestors"] --> DB
+    DB --> DBT["dbt models"]
+    DBT --> DASH["Streamlit analytics"]
 
-    FE["React Frontend<br/>TypeScript - Tailwind - Vite"]:::frontend
-
-    API["Spring Boot API<br/>Java 21 - JWT - JPA"]:::backend
-    AI["AI Service<br/>Python - FastAPI - RAG + Claude"]:::ai
-
-    DB[("PostgreSQL<br/>Transactional + pgvector")]:::data
-    WH[("Analytics Warehouse<br/>DuckDB / Postgres - dbt star schema")]:::data
-
-    BI["Power BI / Streamlit<br/>Analyst Dashboard"]:::frontend
-
-    ORCH["Prefect (nightly)<br/>ingest -> dbt -> test -> alert"]:::ops
-    CI["GitHub Actions<br/>build -> test -> quality -> deploy"]:::ops
-    CLOUD["Azure App Service<br/>+ Azure DB for PostgreSQL - Terraform IaC"]:::ops
-
-    U1 --> FE
-    FE -- REST / JSON --> API
-    API <--> DB
-    API -- semantic search --> AI
-    AI -- embeddings --> DB
-
-    ORCH --> DB
-    ORCH --> WH
-    WH --> BI
-    U2 --> BI
-
-    CI -.-> FE
-    CI -.-> API
-    CI -.-> AI
-    CLOUD -.-> FE
-    CLOUD -.-> API
-    CLOUD -.-> AI
+    COMPOSE["Docker Compose"] -. local orchestration .-> FE
+    COMPOSE -.-> API
+    COMPOSE -.-> AI
+    RENDER["Render blueprint"] -. deployment config .-> FE
+    AZURE["Azure Terraform"] -. optional reference architecture .-> API
 ```
 
-**Request flow.** Users hit the React SPA, which calls the Spring Boot API for listings and saved-listing operations. Natural-language queries are forwarded to the Python AI service, which performs RAG over pgvector embeddings and synthesizes answers with Claude.
+Solid lines describe application and data flows present in the code. Dotted lines describe delivery configuration. The Azure resources under `infra/` are an optional reference architecture; this repository does not claim that they are currently deployed.
 
-**Data pipeline.** A nightly Prefect flow ingests Toronto Open Data and TTC feeds into Postgres, runs dbt transformations into the analytics warehouse, executes data-quality tests, and feeds the Power BI / Streamlit dashboards for analysts.
+## Technology
 
-**Delivery.** GitHub Actions runs a four-stage pipeline (build -> test -> quality -> deploy) and ships Docker images to Azure App Service. Infrastructure is defined in Terraform.
+| Layer | Tools |
+|---|---|
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, TanStack Query, Zustand |
+| Backend | Java 21, Spring Boot 3.3, Spring Data JPA, Spring Security, OpenAPI |
+| AI service | Python 3.12, FastAPI, sentence-transformers, Anthropic API |
+| Data | PostgreSQL 16, pgvector, Flyway, dbt, Prefect, Streamlit |
+| Testing | JUnit, Mockito, Vitest, Testing Library, pytest, Playwright |
+| Delivery | Docker, Docker Compose, GitHub Actions, Render, Terraform |
 
-## Tech Stack
-
-| Layer            | Choice                                    |
-|------------------|-------------------------------------------|
-| Frontend         | React 18 + TypeScript + Tailwind + Vite   |
-| Backend          | Java 21 + Spring Boot 3.3 + Spring Data JPA|
-| Auth             | JWT (JJWT 0.12)                           |
-| AI Service       | Python 3.12 + FastAPI + Claude API (RAG)  |
-| Embeddings       | sentence-transformers all-MiniLM-L6-v2    |
-| Transactional DB | PostgreSQL 16 + pgvector                  |
-| Warehouse        | DuckDB (dev) / Postgres (prod)            |
-| Transformations  | dbt-core                                  |
-| Orchestration    | Prefect 3.x (nightly schedule)            |
-| BI               | Power BI / Streamlit                      |
-| Tests            | JUnit 5 + Mockito, pytest, Vitest + RTL   |
-| E2E              | Playwright                                |
-| Load             | k6                                        |
-| Containers       | Docker + docker-compose                   |
-| CI/CD            | GitHub Actions (4-stage pipeline)         |
-| Cloud            | Azure App Service + Container Registry    |
-| Monitoring       | Azure Application Insights                |
-| IaC              | Terraform                                 |
-
----
-
-## Getting Started
+## Run locally
 
 ### Prerequisites
-- Docker + Docker Compose
-- Java 21 + Maven (for local backend dev)
-- Node 20 (for local frontend dev)
-- Python 3.12 (for AI service / ingestion)
 
-### Run locally with Docker Compose
+- Docker with Docker Compose
+- An Anthropic API key only if you want generated AI answers
 
 ```bash
-# Clone and start everything
 git clone https://github.com/beaprogram/Homebase.git
-cd HomeBase
-cp .env.example .env   # add ANTHROPIC_API_KEY for AI Q&A
-
-docker-compose up --build
-
-# App will be available at:
-# Frontend:   http://localhost:3000
-# Backend API: http://localhost:8080/swagger-ui.html
-# AI Service:  http://localhost:8000/docs
+cd Homebase
+cp .env.example .env
+# Add ANTHROPIC_API_KEY to .env if needed.
+docker compose up --build
 ```
 
-### Seed real Toronto data
+After the services are healthy:
+
+- Frontend: `http://localhost:3000`
+- Backend API docs: `http://localhost:8080/swagger-ui.html`
+- AI service docs: `http://localhost:8000/docs`
+
+To stop the stack, run `docker compose down`. Add `-v` only when you intentionally want to delete the local database volume.
+
+## API overview
+
+```text
+POST   /api/auth/register
+POST   /api/auth/login
+GET    /api/listings
+GET    /api/listings/{id}
+GET    /api/saved-listings
+POST   /api/saved-listings/{listingId}
+DELETE /api/saved-listings/{listingId}
+
+POST   /ask                    # AI service
+```
+
+The running backend exposes the complete OpenAPI contract at `/v3/api-docs` and Swagger UI at `/swagger-ui.html`.
+
+## Run the checks
+
+```bash
+# Backend
+cd backend
+mvn test
+
+# Frontend
+cd ../frontend
+npm ci
+npm test
+npm run build
+
+# AI service
+cd ../ai-service
+python -m pip install -r requirements.txt
+pytest
+
+# Ingestion
+cd ../data/ingestion
+python -m pip install -r requirements.txt
+pytest
+```
+
+The GitHub Actions workflow runs these independent checks on pull requests and pushes to `main`.
+
+## Data and analytics
+
+The repository includes Toronto Open Data and transit ingestors, dbt staging/mart models, generic data tests, a Prefect orchestration flow, and a Streamlit dashboard. Run these components explicitly rather than assuming a hosted nightly schedule:
 
 ```bash
 cd data/ingestion
-pip install -r requirements.txt
-
-# Pull ~500 affordable rental listings from Toronto Open Data
 python ingest_toronto.py
-
-# Seed TTC transit stops
 python ingest_transit.py
 
-# Generate vector embeddings for AI search (requires ~2GB RAM for model)
-python seed_embeddings.py
-```
-
-### Run dbt models
-
-```bash
-cd data/dbt
-pip install dbt-postgres
+cd ../dbt
 dbt run
 dbt test
 ```
 
----
+## Deployment options
 
-## Project Structure
+### Render
 
-```
-HomeBase/
-├── backend/              # Spring Boot Java API
-│   ├── src/main/java/com/homebase/
-│   │   ├── controller/   # AuthController, ListingController, SavedListingController
-│   │   ├── service/      # Business logic
-│   │   ├── repository/   # JPA repositories with custom JPQL filters
-│   │   ├── model/        # User, Listing, SavedListing entities
-│   │   ├── security/     # JWT filter, UserDetailsService
-│   │   └── config/       # Security, OpenAPI, GlobalExceptionHandler
-│   └── src/test/         # JUnit 5 + Mockito unit + WebMvcTest controller tests
-├── frontend/             # React TypeScript app
-│   ├── src/
-│   │   ├── pages/        # HomePage, ListingDetailPage, SavedPage, Login, Register
-│   │   ├── components/   # Layout, ListingCard, SearchFilters, AskPanel
-│   │   ├── hooks/        # TanStack Query hooks
-│   │   ├── api/          # Axios API client with JWT interceptor
-│   │   └── store/        # Zustand auth store
-│   └── src/test/         # Vitest + Testing Library component tests
-├── ai-service/           # Python FastAPI RAG service
-│   └── app/
-│       ├── routers/      # POST /ask endpoint
-│       └── services/     # embedding.py, retrieval.py, llm.py
-├── data/
-│   ├── dbt/              # Staging + mart models, schema tests
-│   ├── ingestion/        # Toronto Open Data + TTC ingestors, embedding seeder
-│   └── orchestration/    # Prefect nightly flow
-├── infra/                # Terraform for Azure
-├── playwright/           # E2E tests (configured separately)
-└── .github/workflows/    # 4-stage CI/CD pipeline
-```
+`render.yaml` defines a PostgreSQL database, Spring Boot service, static frontend, and FastAPI service. After provisioning, verify the generated public service URLs and set `VITE_API_BASE_URL` and `VITE_AI_SERVICE_URL` to those exact URLs before presenting the deployment as a live demo.
 
----
+### Azure reference architecture
 
-## API Reference
-
-### Authentication
-```
-POST /api/auth/register   { name, email, password }  → { token, email, name }
-POST /api/auth/login      { email, password }         → { token, email, name }
-```
-
-### Listings (public)
-```
-GET /api/listings?neighbourhood=Annex&type=RENTAL&minPrice=1500&maxPrice=2500&minBedrooms=1&page=0&size=20
-GET /api/listings/{id}
-```
-
-### Saved Listings (requires Bearer token)
-```
-GET    /api/saved-listings
-POST   /api/saved-listings/{listingId}
-DELETE /api/saved-listings/{listingId}
-```
-
-### AI Service
-```
-POST /ask   { query: "2-bedroom near subway under $2500", top_k: 5 }
-          → { answer: string, listings: [...], query_time_ms: float }
-```
-
-Full OpenAPI spec at `/swagger-ui.html` when running locally.
-
----
-
-## Testing
-
-```bash
-# Backend unit + integration tests
-cd backend && mvn test
-
-# Frontend component tests with coverage
-cd frontend && npm run test:coverage
-
-# AI service tests
-cd ai-service && pytest
-
-# Data ingestion tests
-cd data/ingestion && pytest
-
-# dbt data quality tests
-cd data/dbt && dbt test
-```
-
----
-
-## CI/CD Pipeline
-
-Four stages, runs on every PR:
-
-1. **Build** — Maven build, `npm run build`, Python deps install
-2. **Test** — JUnit tests against real Postgres (Testcontainers), pytest, Vitest
-3. **Quality** — JaCoCo coverage, ESLint, ruff
-4. **Deploy** — Push images to Azure Container Registry → deploy to App Service (main branch only)
-
----
-
-## Deploy to Render (one click)
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beaprogram/Homebase)
-
-Render reads `render.yaml` and provisions everything automatically:
-
-| Service | Type | Notes |
-|---|---|---|
-| `homebase-backend` | Web Service (Docker) | Spring Boot; Flyway auto-migrates + seeds DB |
-| `homebase-frontend` | Static Site | React build, CDN-delivered, HTTPS |
-| `homebase-ai` | Web Service (Docker) | FastAPI RAG; embedding model pre-baked |
-| `homebase-db` | PostgreSQL | 20 listings seeded automatically on first boot |
-
-**After deploy (~5 min):**
-1. Copy the `homebase-backend` URL from the Render dashboard (e.g. `https://homebase-backend.onrender.com`)
-2. Go to `homebase-frontend` → **Environment** → set `VITE_API_BASE_URL` to that URL → **Manual Deploy**
-3. Optionally set `ANTHROPIC_API_KEY` on `homebase-ai` to enable the AI Q&A panel
-
-> Free tier services sleep after 15 min inactivity — first request takes ~30s to wake. Upgrade to Starter ($7/mo) for always-on.
-
----
-
-## Cloud Deployment (Azure)
-
-Infrastructure defined in `infra/` using Terraform:
-
-- **Azure App Service** (Linux) for backend, frontend, AI service
-- **Azure Database for PostgreSQL Flexible Server** (16)
-- **Azure Container Registry** for Docker images
-- **Azure Application Insights** for monitoring
+`infra/` contains Terraform for an Azure-based deployment. Treat it as infrastructure code to review and plan before applying:
 
 ```bash
 cd infra
-cp terraform.tfvars.example terraform.tfvars  # fill in real values
+cp terraform.tfvars.example terraform.tfvars
 terraform init
 terraform plan
-terraform apply
 ```
 
----
+Do not run `terraform apply` until the plan, cost, credentials, and target subscription have been reviewed.
 
-## Data Pipeline
+## Repository map
 
-Nightly Prefect flow (`data/orchestration/flow.py`):
-1. Pull ~500 listings from Toronto Open Data Affordable Rental Housing API
-2. Seed TTC transit stops
-3. `dbt run` — build staging views + mart tables
-4. `dbt test` — run 20+ data quality assertions
-5. Slack alert on failure
+```text
+backend/             Spring Boot API and tests
+frontend/            React application and component tests
+ai-service/          FastAPI retrieval service and tests
+data/ingestion/      Source ingestors and tests
+data/dbt/            Transformations and data-quality tests
+data/orchestration/  Prefect flow
+analytics/           Streamlit dashboard
+infra/               Optional Azure Terraform
+playwright/           End-to-end browser tests
+docs/screenshots/     Product evidence and capture guide
+```
+
+## Current limitations
+
+- The public frontend preview is not proof that every backing service is healthy; verify all health endpoints before sharing it as a complete live demo.
+- The AI answer path needs an Anthropic API key and generated embeddings.
+- The Prefect flow and Azure infrastructure are configured in code but are not claimed as continuously running public infrastructure.
+- Playwright tests require the full local stack and are not part of the lightweight pull-request workflow yet.
+
+## Contributing and security
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow and [SECURITY.md](SECURITY.md) for responsible disclosure. Do not commit `.env` files, cloud credentials, database passwords, or API keys.
+
+## License
+
+No open-source license has been selected yet. Until one is added, the code remains copyrighted by its contributors.
